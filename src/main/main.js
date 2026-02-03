@@ -13,7 +13,7 @@ const moment = require('moment');
 const { pinyin } = require('pinyin');
 
 const {
-    createMainWindow, getMainWin, getNewestBackup, getStatus, updateStatus, checkAppUpdate, exportBackups,
+    createMainWindow, getMainWin, getNewestBackup, getStatus, updateStatus, checkAppUpdate, exportBackups, exportSelectedBackups,
     importBackups, browseLocalSave, deleteLocalSave, osKeyMap, loadSettings, saveSettings, getSettings,
     moveFilesWithProgress, getCurrentVersion, getLatestVersion, updateApp
 } = require('./global');
@@ -315,6 +315,16 @@ ipcMain.handle('fetch-restore-table-data', async (event, wikiId = null) => {
     return games;
 });
 
+ipcMain.handle('fetch-export-table-data', async (event, wikiId = null) => {
+    const { games, errors } = await getGameDataForRestore(wikiId);
+
+    if (errors.length > 0) {
+        getMainWin().webContents.send('show-alert', 'modal', i18next.t('alert.restore_process_error_display'), errors);
+    }
+
+    return games;
+});
+
 ipcMain.handle('restore-game', async (event, gameObj, userActionForAll) => {
     return await restoreGame(gameObj, userActionForAll);
 });
@@ -419,6 +429,10 @@ ipcMain.handle('update-database', async () => {
 
 ipcMain.on('export-backups', (event, count, exportPath) => {
     exportBackups(count, exportPath);
+});
+
+ipcMain.handle('export-selected-backups', async (event, selectedWikiIds, count, exportPath) => {
+    return await exportSelectedBackups(selectedWikiIds, count, exportPath);
 });
 
 ipcMain.on('import-backups', (event, gsmPath) => {
