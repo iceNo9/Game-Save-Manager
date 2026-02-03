@@ -350,6 +350,14 @@ ipcMain.handle('confirm-delete-backup', async (event, wikiId, backupDate) => {
         // If user clicked "Yes"
         if (response.response === 0) {
             fsOriginal.rmSync(backupPath, { recursive: true, force: true });
+            // Notify renderer to refresh backup/restore/export tables
+            try {
+                getMainWin().webContents.send('update-backup-table');
+                getMainWin().webContents.send('update-restore-table');
+                getMainWin().webContents.send('update-export-table');
+            } catch (e) {
+                console.error('Error sending table update events after delete:', e.message);
+            }
             return true;
         }
 
